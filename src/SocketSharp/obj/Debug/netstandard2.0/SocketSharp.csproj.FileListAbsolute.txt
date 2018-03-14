@@ -1,0 +1,9 @@
+C:\Users\Giorgi\Documents\Visual Studio 2017\Projects\SocketSharp\src\SocketSharp\obj\Debug\netstandard2.0\SocketSharp.csprojResolveAssemblyReference.cache
+C:\Users\Giorgi\Documents\Visual Studio 2017\Projects\SocketSharp\src\SocketSharp\obj\Debug\netstandard2.0\SocketSharp.csproj.CoreCompileInputs.cache
+C:\Users\Giorgi\Documents\Visual Studio 2017\Projects\SocketSharp\src\SocketSharp\obj\Debug\netstandard2.0\SocketSharp.AssemblyInfoInputs.cache
+C:\Users\Giorgi\Documents\Visual Studio 2017\Projects\SocketSharp\src\SocketSharp\obj\Debug\netstandard2.0\SocketSharp.AssemblyInfo.cs
+C:\Users\Giorgi\Documents\Visual Studio 2017\Projects\SocketSharp\src\SocketSharp\bin\Debug\netstandard2.0\SocketSharp.deps.json
+C:\Users\Giorgi\Documents\Visual Studio 2017\Projects\SocketSharp\src\SocketSharp\bin\Debug\netstandard2.0\SocketSharp.dll
+C:\Users\Giorgi\Documents\Visual Studio 2017\Projects\SocketSharp\src\SocketSharp\bin\Debug\netstandard2.0\SocketSharp.pdb
+C:\Users\Giorgi\Documents\Visual Studio 2017\Projects\SocketSharp\src\SocketSharp\obj\Debug\netstandard2.0\SocketSharp.dll
+C:\Users\Giorgi\Documents\Visual Studio 2017\Projects\SocketSharp\src\SocketSharp\obj\Debug\netstandard2.0\SocketSharp.pdb
