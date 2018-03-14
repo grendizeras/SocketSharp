@@ -7,6 +7,7 @@ It provides abstraction layer over Socket class, so underlying implementation co
 * `Easy to Use      - Sockets abstracted with IChannel interface, with clear-to-understand api.`
 * `Extensible       - Abstraction makes it possible to use any type of connection by switching the implementaion of IChannel interface.`
 * `Request/Response - Use this pattern, if you want to receive response immediately. Just await async request.`
+* `Robust - Retries to connect, if connection was shut down unexpectedly. If connection broke while sending message, it will try to reconnect and resend message.`
 
 # Installation
 Package is available in <a href="https://www.nuget.org/packages/SocketSharp/">NuGet</a> repository: 
