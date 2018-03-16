@@ -6,6 +6,8 @@
 *.user
 *.userosscache
 *.sln.docstates
+src/SocketSharp/obj
+src/SocketSharp/bin
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

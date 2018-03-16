@@ -25,7 +25,8 @@ namespace SocketSharp.Tcp
         }
         private void OnException(Exceptions.ConnectionException obj)
         {
-            _tcs.SetException(obj);
+            if (_tcs.Task.Status == TaskStatus.WaitingForActivation)
+                _tcs.SetException(obj);
         }
 
         private void OnReceive(byte[] obj)

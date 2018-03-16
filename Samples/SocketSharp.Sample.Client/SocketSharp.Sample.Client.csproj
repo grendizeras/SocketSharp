@@ -32,6 +32,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -51,7 +52,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\src\SocketSharp\SocketSharp.csproj">
+    <ProjectReference Include="..\..\src\SocketSharp\SocketSharp.csproj">
       <Project>{A00A596D-CE55-4259-9D86-6EE0B026793F}</Project>
       <Name>SocketSharp</Name>
     </ProjectReference>

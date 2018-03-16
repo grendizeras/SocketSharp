@@ -221,15 +221,12 @@
   },
   "project": {
     "version": "1.0.0",
-    "restoreSettings": {
-      "hideWarningsAndErrors": true
-    },
     "restore": {
-      "projectUniqueName": "C:\\Users\\Giorgi\\Documents\\Visual Studio 2017\\Projects\\SocketSharp\\src\\SocketSharp\\SocketSharp.csproj",
+      "projectUniqueName": "G:\\Projects\\SocketSharp\\src\\SocketSharp\\SocketSharp.csproj",
       "projectName": "SocketSharp",
-      "projectPath": "C:\\Users\\Giorgi\\Documents\\Visual Studio 2017\\Projects\\SocketSharp\\src\\SocketSharp\\SocketSharp.csproj",
+      "projectPath": "G:\\Projects\\SocketSharp\\src\\SocketSharp\\SocketSharp.csproj",
       "packagesPath": "C:\\Users\\Giorgi\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Giorgi\\Documents\\Visual Studio 2017\\Projects\\SocketSharp\\src\\SocketSharp\\obj\\",
+      "outputPath": "G:\\Projects\\SocketSharp\\src\\SocketSharp\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackagesFallback\\",

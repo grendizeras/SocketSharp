@@ -10,26 +10,38 @@ using System.Threading.Tasks;
 
 namespace SocketSharp.Tcp
 {
+    /// <summary>
+    /// TCP implementation of <see cref="IChannel"/>
+    /// </summary>
     public class TCPConnection : IChannel, IConnectable
     {
         private Socket _socket;
         private string _ip;
-        private ushort _port;
+        private ushort _port=80;
         private bool _open;
-        private byte[] _receiveBuffer;
-        private int _totalReceived;
-        private object _lockObject;
         private CancellationToken _cancellationToken = new CancellationToken();
-
+        
+        /// <summary>
+        /// Event is fired, when connection succeedes (Also on each successful reconnect).
+        /// </summary>
         public event Action OnConnected;
+        /// <summary>
+        /// Event is fired when full message is received.
+        /// </summary>
         public event Action<byte[]> OnReceive;
+        /// <summary>
+        /// Event is fired when connection exception occures (Also on each unsuccessful reconnect).
+        /// </summary>
         public event Action<ConnectionException> OnConnectionException;
 
 
         public bool Open => _open;
-        public int ReconnectTryCount { get; set; } = 20;
+        /// <summary>
+        /// Specifies how many times should try to reconnect, before exception is thrown.
+        /// </summary>
+        public int ReconnectTryCount { get; set; } = 2;
         public string Ip => _ip;
-        public ushort Port => _port = 80;
+        public ushort Port => _port;
         public int ReceiveTimeout { get; set; } = 20000;
 
 
@@ -39,7 +51,10 @@ namespace SocketSharp.Tcp
             _ip = ip;
             _port = port;
         }
-
+        /// <summary>
+        /// This constructor override tries to extract ip address from dns address.
+        /// </summary>
+        /// <param name="address"></param>
         public TCPConnection(string address)
         {
             var addressSplit = address.Split(':');
@@ -73,9 +88,13 @@ namespace SocketSharp.Tcp
             }
             catch { }
         }
-
+        /// <summary>
+        /// Connect to remote server. Retries to connect <see cref="ReconnectTryCount"/> times if server is unavailable. (Implementation of <see cref="IConnectable"/>)
+        /// </summary>
         public void Connect()
         {
+            if (Open)
+                return;
             try
             {
                 ConnectInternal();
@@ -87,14 +106,30 @@ namespace SocketSharp.Tcp
                 OnConnectionException?.Invoke(new EstablishConnectionException(ex));
             }
         }
+        /// <summary>
+        /// Connect to remote server async. Retries to connect <see cref="ReconnectTryCount"/> times if server is unavailable. (Implementation of <see cref="IConnectable"/>)
+        /// </summary>
         public async Task ConnectAsync()
         {
-            var address = IPAddress.Parse(_ip);
-            _socket = CreateSocket(address);
-            await new TaskFactory(_cancellationToken)
-                .FromAsync(_socket.BeginConnect(address, _port, ConnectedAsync, null), _socket.EndConnect);
+            if (Open)
+                return;
+            try
+            {
+                await ConnectInternalAsync();
+            }
+            catch (SocketException ex)
+            {
+                _open = false;
+                OnConnectionException?.Invoke(new EstablishConnectionException(ex));
+            }
         }
 
+
+        /// <summary>
+        /// Send data to remote host. If connection broke, tries to <see cref="ConnectInternal"/> and resend.
+        /// </summary>
+        /// <param name="payload"></param>
+        /// <returns>Data legth, that was sent. -1, if error.</returns>
         public int Send(byte[] payload)
         {
             if (payload == null || payload.Length == 0)
@@ -102,46 +137,49 @@ namespace SocketSharp.Tcp
                 return 0;
             }//Empty payload will cause remote connection to close
 
-            try
-            {
 
-                var envelope = WrapPayloadToEnvelope(payload);
+            //Async wrapper hack to not copy logic
+            return RetrySendAction(async() =>
+            {
+                int sent = 0;
                 if (_open)//socket may be disposed by receive loop
-                    return _socket.Send(envelope);
-                else
-                    throw new SocketException();
-
-            }
-            catch (SocketException ex)
-            {
-
-                try
                 {
-                    Close();
-                    ConnectInternal();
-                    Thread.Sleep(100);
-                    Send(payload);
+                    var envelope = WrapPayloadToEnvelope(payload);
+                    sent = _socket.Send(envelope);
+                    return await Task.FromResult(sent);
                 }
-                catch (SocketException sex)
-                {
-                    OnConnectionException?.Invoke(new SendMessageConnectionException(ex));
-                }
-                return -1;
-            }
+
+                Connect();
+                sent = Send(payload);
+                return await Task.FromResult(sent);;
+            },ConnectInternal).Result;
+
         }
 
+
+
+        /// <summary>
+        /// Send data to remote host. If connection broke, tries to <see cref="ConnectInternalAsync"/> and resend.
+        /// </summary>
+        /// <param name="payload"></param>
+        /// <returns>Data legth, that was sent. -1, if error.</returns>
         public async Task<int> SendAsync(byte[] payload)
         {
             if (payload == null || payload.Length == 0)
                 return 0;
-            if (_open)
+
+            return await RetrySendAction(async () =>
             {
-                var envelope = WrapPayloadToEnvelope(payload);
-                return await new TaskFactory(_cancellationToken)
-                    .FromAsync(_socket.BeginSend(envelope, 0, envelope.Length, SocketFlags.None, SentAsync, null), _socket.EndSend);
-            }
-            await ConnectAsync();
-            return await SendAsync(payload);
+                if (_open)
+                {
+                    var envelope = WrapPayloadToEnvelope(payload);
+                    return await new TaskFactory(_cancellationToken)
+                        .FromAsync(_socket.BeginSend(envelope, 0, envelope.Length, SocketFlags.None, SentAsync, null), _socket.EndSend);
+                }
+                await ConnectAsync();
+                return await SendAsync(payload);
+            },ConnectInternalAsync);
+
         }
         public void Dispose()
         {
@@ -151,6 +189,30 @@ namespace SocketSharp.Tcp
 
 
         #region private 
+
+        private async Task<int> RetrySendAction(Func<Task<int>> sendAction,Func<Task> connectAction)
+        {
+            try
+            {
+                return await sendAction();
+            }
+            catch (SocketException ex)
+            {
+
+                try
+                {
+                    Close();
+                    await connectAction();
+                    Thread.Sleep(100);
+                    return await sendAction();
+                }
+                catch (SocketException sex)
+                {
+                    OnConnectionException?.Invoke(new SendMessageConnectionException(ex));
+                }
+            }
+            return -1;
+        }
 
         private byte[] WrapPayloadToEnvelope(byte[] payload)
         {
@@ -171,70 +233,72 @@ namespace SocketSharp.Tcp
             socket.ReceiveTimeout = ReceiveTimeout;
             return socket;
         }
-        private void ConnectInternal(int triedCount = 0)
+
+        private Task ConnectInternal()
         {
+            var address = IPAddress.Parse(_ip);
+            return RetryConnectAction(() =>
+            {
+                _socket = CreateSocket(address);
+                _socket.Connect(address, _port);
+                ReceiveLoop();
+                _open = true;
+                return Task.CompletedTask;
+            });           
+
+        }
+
+        private async Task ConnectInternalAsync()
+        {
+            var address = IPAddress.Parse(_ip);
+            await  RetryConnectAction(async() =>
+            {
+                _socket = CreateSocket(address);
+                await new TaskFactory(_cancellationToken)
+               .FromAsync(_socket.BeginConnect(address, _port, ConnectedAsync, null), _socket.EndConnect);
+            });
+        }
+
+        private async Task RetryConnectAction(Func<Task> action,int triedCount=0)
+        {
+            
             try
             {
                 if (_socket != null)
                 {
                     Close();
-                }
-                var address = IPAddress.Parse(_ip);
-                _socket = CreateSocket(address);
-                _socket.Connect(address, _port);
-                ReceiveLoop();
-                _open = true;
+                }               
+                await action();
             }
             catch (SocketException ex)
             {
                 if (triedCount <= ReconnectTryCount)
                 {
                     Thread.Sleep(1000);
-                    ConnectInternal(++triedCount);
+                    await RetryConnectAction(action,++triedCount);
                 }
                 else throw;
             }
-
         }
 
 
-        
-        private void SentAsync(IAsyncResult result) {
+
+        private void SentAsync(IAsyncResult result)
+        {
             if (result.IsCompleted)
             {
 
             }
         }
 
-      
-       private void ConnectedAsync(IAsyncResult result)
+
+        private void ConnectedAsync(IAsyncResult result)
         {
             _open = true;
             ReceiveLoop();
         }
 
         
-
-        private T RetryConnectionAction<T>(Func<T> action, int retriedCount = 0)
-        {
-            try
-            {
-                return action();
-            }
-            catch (Exception ex)
-            {
-                if (retriedCount <= ReconnectTryCount)
-                {
-                    Thread.Sleep(1000);
-                    ConnectInternal();
-                    return RetryConnectionAction(action, ++retriedCount);
-                }
-                else
-                    throw;
-            }
-        }
-
-
         private void ReceiveLoop(int size = 4, bool header = true)
         {
             var e = new SocketAsyncEventArgs()
@@ -302,6 +366,6 @@ namespace SocketSharp.Tcp
             return $"{Ip}:{Port}";
         }
 
-      
+
     }
 }

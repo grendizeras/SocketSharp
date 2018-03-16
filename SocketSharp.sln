@@ -9,9 +9,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{6A83F1E7-3DD
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{FAA26485-843E-4E96-8950-7CB4C9ECA9BB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketSharp.Sample.Server", "SocketSharp.Sample.Server\SocketSharp.Sample.Server.csproj", "{BF839419-8CE3-4030-8611-4332D861019B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketSharp.Sample.Server", "Samples\SocketSharp.Sample.Server\SocketSharp.Sample.Server.csproj", "{BF839419-8CE3-4030-8611-4332D861019B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketSharp.Sample.Client", "SocketSharp.Sample.Client\SocketSharp.Sample.Client.csproj", "{3C02FE7B-4288-4B41-88F9-42D03A999A90}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketSharp.Sample.Client", "Samples\SocketSharp.Sample.Client\SocketSharp.Sample.Client.csproj", "{3C02FE7B-4288-4B41-88F9-42D03A999A90}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

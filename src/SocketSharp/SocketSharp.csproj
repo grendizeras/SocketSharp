@@ -2,6 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>Giorgi Khutsishvili</Authors>
+    <Company />
+    <Description>CSharp socket wrapper library.
+It abstracts working with sockets using channel interface. 
+Any type of connection could be implemented behind the interface.</Description>
+    <RepositoryUrl>https://github.com/grendizeras/SocketSharp</RepositoryUrl>
+    <RepositoryType>GitHub</RepositoryType>
+    <PackageTags>Socket, SocketSharp, Socket wrapper</PackageTags>
+    <PackageReleaseNotes>Initial release</PackageReleaseNotes>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>

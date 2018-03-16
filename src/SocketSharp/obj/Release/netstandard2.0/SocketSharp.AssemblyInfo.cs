@@ -11,8 +11,10 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("SocketSharp")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("Giorgi Khutsishvili")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
+[assembly: System.Reflection.AssemblyDescriptionAttribute("CSharp socket wrapper library.\r\nIt abstracts working with sockets using channel i" +
+    "nterface. \r\nAny type of connection could be implemented behind the interface.")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
 [assembly: System.Reflection.AssemblyProductAttribute("SocketSharp")]
