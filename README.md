@@ -1,6 +1,6 @@
 # SocketSharp
 SocketSharp is wrapper library for <a href="https://msdn.microsoft.com/en-us/library/system.net.sockets.socket(v=vs.110).aspx">System.Net.Sockets.Socket</a>.
-It provides abstraction layer over Socket class, so underlying implementation could be any tipe of connection (TCP, UDP etc.)
+It provides abstraction layer over Socket class, so underlying implementation could be any type of connection (TCP, UDP etc.)
 
 ### It has following advantages:
 * `Fast             - It leverages from socket's native asynchronous api, which makes duplex communication fast with minimum overhead from wrapper class.`
