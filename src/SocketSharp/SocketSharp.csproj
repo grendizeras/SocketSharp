@@ -6,12 +6,17 @@
     <Company />
     <Description>CSharp socket wrapper library.
 It abstracts working with sockets using channel interface. 
-Any type of connection could be implemented behind the interface.</Description>
+Any type of connection could be implemented behind the interface.
+</Description>
     <RepositoryUrl>https://github.com/grendizeras/SocketSharp</RepositoryUrl>
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>Socket, SocketSharp, Socket wrapper</PackageTags>
-    <PackageReleaseNotes>Initial release</PackageReleaseNotes>
+    <PackageReleaseNotes>Fixed reconnect and overall refactored</PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/grendizeras/SocketSharp</PackageProjectUrl>
+    <AssemblyVersion>1.0.3.0</AssemblyVersion>
+    <FileVersion>1.0.3.0</FileVersion>
+    <Version>1.0.3</Version>
   </PropertyGroup>
 
   <ItemGroup>
