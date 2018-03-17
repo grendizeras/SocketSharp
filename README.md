@@ -12,7 +12,7 @@ It provides abstraction layer over Socket class, so underlying implementation co
 # Installation
 Package is available in <a href="https://www.nuget.org/packages/SocketSharp/">NuGet</a> repository: 
 ```
-PM> Install-Package SocketSharp -Version 1.0.0
+PM> Install-Package SocketSharp -Version 1.0.3
 ```
 # How to use
 
