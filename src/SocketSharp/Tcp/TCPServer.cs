@@ -1,5 +1,4 @@
 ﻿
-using SocketSharp.Abstract;
 using SocketSharp.Exceptions;
 using System;
 using System.Collections.Generic;

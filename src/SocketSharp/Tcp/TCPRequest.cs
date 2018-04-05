@@ -1,5 +1,4 @@
 ﻿
-using SocketSharp.Abstract;
 using System.Threading.Tasks;
 
 namespace SocketSharp.Tcp
@@ -8,7 +7,7 @@ namespace SocketSharp.Tcp
     {
 
         private readonly TCPConnection _channel;
-        private TaskCompletionSource<byte[]> _tcs;
+        private TaskCompletionSource<ReceiveContext> _tcs;
         public TCPRequest(string ip, ushort port)
         {
             _channel = new TCPConnection(ip, port);
@@ -29,10 +28,10 @@ namespace SocketSharp.Tcp
                 _tcs.SetException(obj);
         }
 
-        private void OnReceive(byte[] obj)
+        private void OnReceive(ReceiveContext ctx)
         {
             if (_tcs.Task.Status == TaskStatus.WaitingForActivation)
-                _tcs.SetResult(obj);
+                _tcs.SetResult(ctx);
         }
 
         public async Task<byte[]> RequestAsync(byte[] data)
@@ -41,9 +40,9 @@ namespace SocketSharp.Tcp
             {
                 await _channel.ConnectAsync();
             }
-            _tcs = new TaskCompletionSource<byte[]>();
+            _tcs = new TaskCompletionSource<ReceiveContext>();
             await _channel.SendAsync(data);
-            return await _tcs.Task;
+            return (await _tcs.Task).Payload;
 
         }
 

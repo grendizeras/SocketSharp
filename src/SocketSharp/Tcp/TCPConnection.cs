@@ -1,5 +1,4 @@
-﻿using SocketSharp.Abstract;
-using SocketSharp.Exceptions;
+﻿using SocketSharp.Exceptions;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -17,10 +16,10 @@ namespace SocketSharp.Tcp
     {
         private Socket _socket;
         private string _ip;
-        private ushort _port=80;
+        private ushort _port = 80;
         private bool _open;
         private CancellationToken _cancellationToken = new CancellationToken();
-        
+
         /// <summary>
         /// Event is fired, when connection succeedes (Also on each successful reconnect).
         /// </summary>
@@ -28,7 +27,7 @@ namespace SocketSharp.Tcp
         /// <summary>
         /// Event is fired when full message is received.
         /// </summary>
-        public event Action<byte[]> OnReceive;
+        public event Action<ReceiveContext> OnReceive;
         /// <summary>
         /// Event is fired when connection exception occures (Also on each unsuccessful reconnect).
         /// </summary>
@@ -139,7 +138,7 @@ namespace SocketSharp.Tcp
 
 
             //Async wrapper hack to not copy logic
-            return RetrySendAction(async() =>
+            return RetrySendAction(async () =>
             {
                 int sent = 0;
                 if (_open)//socket may be disposed by receive loop
@@ -151,8 +150,8 @@ namespace SocketSharp.Tcp
 
                 Connect();
                 sent = Send(payload);
-                return await Task.FromResult(sent);;
-            },ConnectInternal).Result;
+                return await Task.FromResult(sent); ;
+            }, ConnectInternal).Result;
 
         }
 
@@ -178,7 +177,7 @@ namespace SocketSharp.Tcp
                 }
                 await ConnectAsync();
                 return await SendAsync(payload);
-            },ConnectInternalAsync);
+            }, ConnectInternalAsync);
 
         }
         public void Dispose()
@@ -190,7 +189,7 @@ namespace SocketSharp.Tcp
 
         #region private 
 
-        private async Task<int> RetrySendAction(Func<Task<int>> sendAction,Func<Task> connectAction)
+        private async Task<int> RetrySendAction(Func<Task<int>> sendAction, Func<Task> connectAction)
         {
             try
             {
@@ -240,34 +239,35 @@ namespace SocketSharp.Tcp
             return RetryConnectAction(() =>
             {
                 _socket = CreateSocket(address);
+                _socket.ReceiveBufferSize = int.MaxValue;
                 _socket.Connect(address, _port);
                 ReceiveLoop();
                 _open = true;
                 return Task.CompletedTask;
-            });           
+            });
 
         }
 
         private async Task ConnectInternalAsync()
         {
             var address = IPAddress.Parse(_ip);
-            await  RetryConnectAction(async() =>
-            {
-                _socket = CreateSocket(address);
-                await new TaskFactory(_cancellationToken)
-               .FromAsync(_socket.BeginConnect(address, _port, ConnectedAsync, null), _socket.EndConnect);
-            });
+            await RetryConnectAction(async () =>
+           {
+               _socket = CreateSocket(address);
+               await new TaskFactory(_cancellationToken)
+              .FromAsync(_socket.BeginConnect(address, _port, ConnectedAsync, null), _socket.EndConnect);
+           });
         }
 
-        private async Task RetryConnectAction(Func<Task> action,int triedCount=0)
+        private async Task RetryConnectAction(Func<Task> action, int triedCount = 0)
         {
-            
+
             try
             {
                 if (_socket != null)
                 {
                     Close();
-                }               
+                }
                 await action();
             }
             catch (SocketException ex)
@@ -275,7 +275,7 @@ namespace SocketSharp.Tcp
                 if (triedCount <= ReconnectTryCount)
                 {
                     Thread.Sleep(1000);
-                    await RetryConnectAction(action,++triedCount);
+                    await RetryConnectAction(action, ++triedCount);
                 }
                 else throw;
             }
@@ -298,12 +298,16 @@ namespace SocketSharp.Tcp
             ReceiveLoop();
         }
 
-        
+
         private void ReceiveLoop(int size = 4, bool header = true)
         {
             var e = new SocketAsyncEventArgs()
             {
-                UserToken = header,//notifies receiver handler, that it he should process message header, and call ReceiveLoop with extracted message size
+                UserToken = new EventArgsToken
+                {
+                    ReadHeader = header,
+                    ChunkTimestamp = DateTime.UtcNow.Ticks
+                },//notifies receiver handler, that it he should process message header, and call ReceiveLoop with extracted message size
                 DisconnectReuseSocket = false
             };
             e.Completed += ReceivePacket;
@@ -323,10 +327,19 @@ namespace SocketSharp.Tcp
                 OnConnectionException?.Invoke(new ReceiveMessageConnectionException(new SocketException()));
                 return;
             }
+
+
+
+            var token = e.UserToken as EventArgsToken;
+
+            token.SetRate(e.BytesTransferred);
+
             var totalReceived = e.Offset + e.BytesTransferred;
+           
+
             if (totalReceived >= e.Buffer.Length)
             {
-                if ((bool)e.UserToken)
+                if (token.ReadHeader)
                 {//extract message size from envelope header and start receiving actual payload
                     var buffer = e.Buffer;
                     if (BitConverter.IsLittleEndian)
@@ -339,7 +352,12 @@ namespace SocketSharp.Tcp
                     try
                     {
                         //whole payload was received, pass it to handler
-                        OnReceive?.Invoke(e.Buffer);
+                        OnReceive?.Invoke(new ReceiveContext
+                        {
+                            Payload= e.Buffer,
+                            Rate=token.Rate,
+                            ReceiveDuration=token.ReceiveDuration
+                        });
                     }
                     catch (Exception ex)
                     {
@@ -351,6 +369,10 @@ namespace SocketSharp.Tcp
             }
             else
             {//didn't get full message, continue receiving
+
+                token.ChunkTimestamp = DateTime.UtcNow.Ticks;
+                e.UserToken = token;
+                e.SetBuffer(e.Buffer, totalReceived, e.Buffer.Length - totalReceived);
                 _socket.ReceiveAsync(e);
             }
         }
@@ -366,6 +388,44 @@ namespace SocketSharp.Tcp
             return $"{Ip}:{Port}";
         }
 
+
+
+        private class EventArgsToken
+        {
+
+            private double _rate;
+            private long _packetTimestamp;
+            public bool ReadHeader { get; set; }
+            public long ChunkTimestamp { get; set; }
+            public double ReceiveDuration => new TimeSpan(DateTime.UtcNow.Ticks - _packetTimestamp).TotalSeconds;
+            public string Rate
+            {
+                get
+                {
+                    var rate = _rate / 1048576;
+                    return $"{Math.Round(rate,2)} {(rate > 1 ? "mb/s" : "kb/s")}";
+                }
+            }
+
+
+            public EventArgsToken()
+            {
+                _packetTimestamp = DateTime.UtcNow.Ticks;
+            }
+
+            internal void SetRate(int bytesTransferred)
+            {
+                var seconds = new TimeSpan(DateTime.UtcNow.Ticks - this.ChunkTimestamp).TotalSeconds;
+               
+                if (this.ChunkTimestamp != 0 && seconds > 0)
+                {
+                    var rate = (bytesTransferred / seconds);
+                    this._rate = (rate + this._rate) / 2;
+                }
+            }
+
+
+        }
 
     }
 }

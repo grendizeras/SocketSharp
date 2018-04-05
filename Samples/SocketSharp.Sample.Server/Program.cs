@@ -33,7 +33,7 @@ namespace SocketSharp.Sample.Server
 
         }
 
-        private static void OnInboundConnection(Abstract.IChannel channel)
+        private static void OnInboundConnection(IChannel channel)
         {
             channel.OnReceive += OnChannelReceive;
             channel.OnConnectionException += OnChannelConnectionException;
@@ -44,9 +44,9 @@ namespace SocketSharp.Sample.Server
             Console.WriteLine(ex.Message);
         }
 
-        private static void OnChannelReceive(byte[] data)
+        private static void OnChannelReceive(ReceiveContext ctx)
         {
-            Console.WriteLine(Encoding.UTF8.GetString(data));
+            Console.WriteLine($"{Encoding.UTF8.GetString(ctx.Payload)}. Speed: {ctx.Rate}. Duration: {ctx.ReceiveDuration}");
         }
     }
 }

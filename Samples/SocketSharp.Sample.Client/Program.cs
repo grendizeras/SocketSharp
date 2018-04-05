@@ -1,7 +1,7 @@
-﻿using SocketSharp.Abstract;
-using SocketSharp.Tcp;
+﻿using SocketSharp.Tcp;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -53,9 +53,9 @@ namespace SocketSharp.Sample.Client
             Console.WriteLine(Encoding.UTF8.GetString(response));
 
         }
-        private static void OnReceive(byte[] data)
+        private static void OnReceive(ReceiveContext ctx )
         {
-            Console.WriteLine(Encoding.UTF8.GetString(data));
+            Console.WriteLine($"{Encoding.UTF8.GetString(ctx.Payload)}. Speed: {ctx.Rate}. Duration: {ctx.ReceiveDuration}");
         }
 
         private static void OnConnectionException(Exceptions.ConnectionException ex)
