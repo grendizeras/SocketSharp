@@ -11,7 +11,8 @@ namespace SocketSharp.Tcp
     public class TCPServer : IHost
     {
         Socket _listenerSocket;
-        List<IChannel> _connections=new List<IChannel>();
+        List<IChannel> _connections = new List<IChannel>();
+        public Socket UnderlyingSocket => _listenerSocket;
         public IEnumerable<IChannel> Connections => _connections;
 
         public event Action<IChannel> OnInboundConnection;
@@ -20,7 +21,7 @@ namespace SocketSharp.Tcp
 
         public TCPServer()
         {
-            _listenerSocket =  new Socket(AddressFamily.InterNetwork,SocketType.Stream, ProtocolType.Tcp);           
+            _listenerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         }
 
         public void Start(ushort port)
@@ -37,7 +38,7 @@ namespace SocketSharp.Tcp
             _listenerSocket.AcceptAsync(e);
         }
 
-        private void OnConnected(object sender,SocketAsyncEventArgs e)
+        private void OnConnected(object sender, SocketAsyncEventArgs e)
         {
             var connected = new TCPConnection(e.AcceptSocket);
             connected.OnConnectionException += (ex) =>
@@ -53,7 +54,7 @@ namespace SocketSharp.Tcp
             {
                 OnInboundConnection?.Invoke(connected);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Trace.WriteLine(ex.ToString());
             }
@@ -65,6 +66,6 @@ namespace SocketSharp.Tcp
             _listenerSocket.Dispose();
         }
 
-      
+
     }
 }

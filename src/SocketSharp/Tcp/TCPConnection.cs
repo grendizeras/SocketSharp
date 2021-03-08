@@ -42,6 +42,7 @@ namespace SocketSharp.Tcp
         public string Ip => _ip;
         public ushort Port => _port;
         public int ReceiveTimeout { get; set; } = 20000;
+        public Socket UnderlyingSocket => _socket;
 
 
 
@@ -335,7 +336,7 @@ namespace SocketSharp.Tcp
             token.SetRate(e.BytesTransferred);
 
             var totalReceived = e.Offset + e.BytesTransferred;
-           
+
 
             if (totalReceived >= e.Buffer.Length)
             {
@@ -354,9 +355,9 @@ namespace SocketSharp.Tcp
                         //whole payload was received, pass it to handler
                         OnReceive?.Invoke(new ReceiveContext
                         {
-                            Payload= e.Buffer,
-                            Rate=token.Rate,
-                            ReceiveDuration=token.ReceiveDuration
+                            Payload = e.Buffer,
+                            Rate = token.Rate,
+                            ReceiveDuration = token.ReceiveDuration
                         });
                     }
                     catch (Exception ex)
@@ -403,7 +404,7 @@ namespace SocketSharp.Tcp
                 get
                 {
                     var rate = _rate / 1048576;
-                    return $"{Math.Round(rate,2)} {(rate > 1 ? "mb/s" : "kb/s")}";
+                    return $"{Math.Round(rate, 2)} {(rate > 1 ? "mb/s" : "kb/s")}";
                 }
             }
 
@@ -416,7 +417,7 @@ namespace SocketSharp.Tcp
             internal void SetRate(int bytesTransferred)
             {
                 var seconds = new TimeSpan(DateTime.UtcNow.Ticks - this.ChunkTimestamp).TotalSeconds;
-               
+
                 if (this.ChunkTimestamp != 0 && seconds > 0)
                 {
                     var rate = (bytesTransferred / seconds);
