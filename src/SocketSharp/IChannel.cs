@@ -6,7 +6,6 @@ namespace SocketSharp
 {
     public interface IChannel:IDisposable
     {
-        bool Open { get;}
         
         event Action<ReceiveContext> OnReceive;
         event Action<ConnectionException> OnConnectionException;

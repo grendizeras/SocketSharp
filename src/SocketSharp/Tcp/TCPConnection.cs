@@ -34,7 +34,7 @@ namespace SocketSharp.Tcp
         public event Action<ConnectionException> OnConnectionException;
 
 
-        public bool Open => _open;
+        public bool Connected => _open;
         /// <summary>
         /// Specifies how many times should try to reconnect, before exception is thrown.
         /// </summary>
@@ -93,7 +93,7 @@ namespace SocketSharp.Tcp
         /// </summary>
         public void Connect()
         {
-            if (Open)
+            if (Connected)
                 return;
             try
             {
@@ -111,7 +111,7 @@ namespace SocketSharp.Tcp
         /// </summary>
         public async Task ConnectAsync()
         {
-            if (Open)
+            if (Connected)
                 return;
             try
             {
@@ -240,7 +240,6 @@ namespace SocketSharp.Tcp
             return RetryConnectAction(() =>
             {
                 _socket = CreateSocket(address);
-                _socket.ReceiveBufferSize = int.MaxValue;
                 _socket.Connect(address, _port);
                 ReceiveLoop();
                 _open = true;
@@ -350,6 +349,8 @@ namespace SocketSharp.Tcp
                 }
                 else
                 {
+                    //restart loop for new messages
+                    ReceiveLoop();
                     try
                     {
                         //whole payload was received, pass it to handler
@@ -364,8 +365,6 @@ namespace SocketSharp.Tcp
                     {
                         Trace.WriteLine(ex.ToString());
                     }
-                    //restart loop for new messages
-                    ReceiveLoop();
                 }
             }
             else

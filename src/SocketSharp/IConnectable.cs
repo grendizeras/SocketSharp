@@ -5,6 +5,8 @@ namespace SocketSharp
 {
     public interface IConnectable
     {
+        bool Connected { get;}
+
         event Action OnConnected;
         void Connect();
         Task ConnectAsync();

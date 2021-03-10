@@ -36,7 +36,7 @@ namespace SocketSharp.Tcp
 
         public async Task<byte[]> RequestAsync(byte[] data)
         {
-            if (!_channel.Open)
+            if (!_channel.Connected)
             {
                 await _channel.ConnectAsync();
             }
