@@ -203,7 +203,7 @@ namespace SocketSharp.Tcp
                 {
                     Close();
                     await connectAction();
-                    Thread.Sleep(100);
+                    await Task.Delay(100);
                     return await sendAction();
                 }
                 catch (SocketException sex)
@@ -274,7 +274,7 @@ namespace SocketSharp.Tcp
             {
                 if (triedCount <= ReconnectTryCount)
                 {
-                    Thread.Sleep(1000);
+                    await Task.Delay(1000);
                     await RetryConnectAction(action, ++triedCount);
                 }
                 else throw;
@@ -373,7 +373,9 @@ namespace SocketSharp.Tcp
                 token.ChunkTimestamp = DateTime.UtcNow.Ticks;
                 e.UserToken = token;
                 e.SetBuffer(e.Buffer, totalReceived, e.Buffer.Length - totalReceived);
-                _socket.ReceiveAsync(e);
+                if(!_socket.ReceiveAsync(e)){
+                    ReceivePacket(this,e);
+                }
             }
         }
 
